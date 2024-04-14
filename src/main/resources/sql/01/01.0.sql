@@ -80,17 +80,6 @@ CREATE TABLE comp3005project.Group_class (
     FOREIGN KEY (trainer_id) REFERENCES comp3005project.User(user_id)
 );
 
-CREATE TABLE comp3005project.Class_schedule (
-    schedule_id SERIAL PRIMARY KEY,
-    staff_id INT NOT NULL,
-    class_id INT NOT NULL,
-    start_time TIMESTAMP NOT NULL,
-    end_time TIMESTAMP NOT NULL,
-    FOREIGN KEY (staff_id) REFERENCES comp3005project.User(user_id),
-    FOREIGN KEY (class_id) REFERENCES comp3005project.Group_class(class_id)
-);
-
-
 CREATE TABLE comp3005project.Billing (
     billing_id SERIAL PRIMARY KEY,
     member_id INT NOT NULL,
@@ -139,6 +128,12 @@ VALUES (1, 'Ran 5km', '2024-03-10');
 INSERT INTO comp3005project.Exercise_routine (member_id, description, duration)
 VALUES (1, 'Run 5km', '30 mins');
 
+INSERT INTO comp3005project.Personal_session (member_id, trainer_id, start_time, duration, status)
+VALUES (1, 2, '2024-04-12 09:00:00', 60, 'COMPLETED');
+
+INSERT INTO comp3005project.Group_class (name, trainer_id, capacity, date, duration)
+VALUES ('Yoga', 2, 10, '2024-04-12', 60);
+
 INSERT INTO comp3005project.User (first_name, last_name, email, password, role)
 VALUES ('Alice', 'Smith', 'alice@email.com', 'password', 'TRAINER');
 
@@ -167,3 +162,7 @@ VALUES ('Gym 2', 'AVAILABLE');
 
 INSERT INTO comp3005project.Room (name, status)
 VALUES ('Massage room 1', 'AVAILABLE');
+
+INSERT INTO comp3005project.Room_booking (staff_id, room_id, duration)
+VALUES (3, 1, '1 hour');
+
