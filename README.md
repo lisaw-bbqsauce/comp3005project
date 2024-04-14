@@ -18,3 +18,4 @@ If you are having trouble setting up the database you can run the queries manual
 
 ### Video
 [Demo on youtube](https://youtu.be/DbH3xSYFKnY)
+[Short vid on ER model + sql files](https://youtu.be/nmXBCmnRzTY)
