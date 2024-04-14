@@ -17,4 +17,4 @@ If you are having trouble setting up the database you can run the queries manual
 1. Run!
 
 ### Video
-TODO
+[Demo on youtube](https://youtu.be/DbH3xSYFKnY)

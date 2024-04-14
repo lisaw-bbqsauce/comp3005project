@@ -13,7 +13,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 public class Main {
     private final static String url = "jdbc:postgresql://localhost:5432/University";
@@ -182,7 +181,7 @@ public class Main {
             while (!exit) {
                 User member = getOneUser(email);
 
-                int member_id = member.getUserId();
+                int memberId = member.getUserId();
                 String newFirstName, newLastName, newEmail, newPassword, newPhoneNumber, newAddress;
                 
                 printMemberProfile(member);
@@ -210,8 +209,9 @@ public class Main {
                         newPhoneNumber = reader.readLine();
                         System.out.println("Enter your new address:");
                         newAddress = reader.readLine();
+
                         User newMember = new User(newFirstName, newLastName, newEmail, newPassword, newPhoneNumber, newAddress, UserRole.MEMBER);
-                        updatePersonalInformation(member_id, newMember);
+                        updatePersonalInformation(memberId, newMember);
                         break;
                     case "2": // add fitness goal
                         System.out.println("Add your fitness goals.");
@@ -221,7 +221,7 @@ public class Main {
                         String swim = reader.readLine();
                         System.out.println("Enter your biking goal (required):");
                         String bike = reader.readLine();
-                        createFitnessGoal(member_id, run, swim, bike);
+                        createFitnessGoal(memberId, run, swim, bike);
                         break;
                     case "3": // update fitness goals
                         System.out.println("Update your fitness goals or press enter to skip.");
@@ -231,21 +231,30 @@ public class Main {
                         swim = reader.readLine();
                         System.out.println("Enter your new biking goal:");
                         bike = reader.readLine();
-                        updateFitnessGoals(member_id, run, swim, bike);
+                        if (run.isEmpty()) {
+                            run = null;
+                        }
+                        if (swim.isEmpty()) {
+                            swim = null;
+                        }
+                        if (bike.isEmpty()) {
+                            bike = null;
+                        }
+                        updateFitnessGoals(memberId, run, swim, bike);
                         break;
                     case "4": // add health metrics
                         System.out.println("Enter the metric you would like to add:");
                         String metric = reader.readLine();
                         System.out.println("Enter your value:");
                         String value = reader.readLine();
-                        createHealthMetric(member_id, metric, value);
+                        createHealthMetric(memberId, metric, value);
                         break;
                     case "5": // update health metrics
                         System.out.println("Enter the metric you would like to update:");
                         metric = reader.readLine();
                         System.out.println("Enter your new value:");
                         value = reader.readLine();
-                        updateHealthMetrics(member_id, metric, value);
+                        updateHealthMetrics(memberId, metric, value);
                         break;
                     case "6": // go to dashboard
                         printDashboardDisplay(member.getFirstName(), member.getLastName());
@@ -298,7 +307,7 @@ public class Main {
                         switch (query) {
                             case "1": // add to schedule
                                 while (true) {
-                                    printTrainerSchedule(curr_trainer);
+                                    getTrainerSchedule(curr_trainer);
                                     System.out.println("Enter the date (yyyy-mm-dd) or '0' to go back:");
                                     String dateStr = reader.readLine();
                                     if (dateStr.equals("0")) {
@@ -321,21 +330,15 @@ public class Main {
                                 break;
                             case "2": // remove from schedule
                                 while (true) {
-                                    printTrainerSchedule(curr_trainer);
+                                    getTrainerSchedule(curr_trainer);
                                     System.out.println("Enter the date (yyyy-mm-dd) or '0' to go back:");
                                     String temp = reader.readLine();
                                     if (temp.equals("0")) {
                                         break;
                                     }
-                                    Date date = Date.valueOf(temp);
-                                    System.out.println("Enter the start time (hh:mm:ss):");
-                                    Time startTime = Time.valueOf(reader.readLine());
-                                    System.out.println("Enter the end time (hh:mm:ss):");
-                                    Time endTime = Time.valueOf(reader.readLine());
-
-                                    Timestamp sTimestamp = new Timestamp(date.getTime() + startTime.getTime());
-                                    Timestamp eTimestamp = new Timestamp(date.getTime() + endTime.getTime());
-                                    deleteTrainerSchedule(curr_trainer, sTimestamp, eTimestamp);
+                                    System.out.println("Enter the schedule id:");
+                                    int scheduleId = Integer.parseInt(reader.readLine());
+                                    deleteTrainerSchedule(scheduleId);
                                 }
                             case "3": // view member profile
                                 System.out.println("Enter member's first name:");
@@ -390,7 +393,7 @@ public class Main {
                     while (!exit) {
                         String adminOptions = "1 Create room booking\n2 Update room booking\n3 Cancel room booking" 
                                 + "\n4 Monitor equipment maintenance\n5 Update class schedule\n6 Update billing and payment"
-                                + "\n7 View all rooms\n8 View all room bookings\n0 Back\n";
+                                + "\n7 View all rooms\n8 View all room bookings\n9 View billings\n0 Back\n";
                         System.out.println("Pick an option:");
                         System.out.println(adminOptions);
                         query = reader.readLine();
@@ -407,11 +410,11 @@ public class Main {
                             case "2": // update room booking
                                 System.out.println("Enter booking id:");
                                 int booking_id = Integer.parseInt(reader.readLine());
-                                System.out.println("Enter room name:");
-                                roomName = reader.readLine();
+                                // System.out.println("Enter room name:");
+                                // roomName = reader.readLine();
                                 System.out.println("Enter new duration of booking:");
                                 duration = reader.readLine();
-                                updateRoomBooking(booking_id, adminId, roomName, duration);
+                                updateRoomBooking(booking_id, adminId, duration);
                                 break;
                             case "3": // cancel room booking
                                 System.out.println("Enter booking id to cancel:");
@@ -433,8 +436,21 @@ public class Main {
                             case "5": // update class schedule
                                 System.out.println("Enter class id:");
                                 int class_id = Integer.parseInt(reader.readLine());
-                                System.out.println("Enter new class date:");
-                                Date date = Date.valueOf(reader.readLine());
+                                System.out.println("\nEnter date (yyyy-mm-dd):");
+                                String dateStr = reader.readLine();
+                                Date date = Date.valueOf(dateStr);
+
+                                // System.out.println("Enter the start time (hh:mm:ss):");
+                                // String startTimeStr = reader.readLine();
+                                // System.out.println("Enter the end time (hh:mm:ss):");
+                                // String endTimeStr = reader.readLine();
+
+                                // LocalDateTime dateTime = LocalDateTime.parse(dateStr + "T" + startTimeStr);
+                                // Timestamp startTimestamp = Timestamp.valueOf(dateTime);
+
+                                // dateTime = LocalDateTime.parse(dateStr + "T" + endTimeStr);
+                                // Timestamp endTimestamp = Timestamp.valueOf(dateTime);
+
                                 System.out.println("Enter new class duration:");
                                 String classDuration = reader.readLine();
 
@@ -454,6 +470,9 @@ public class Main {
                                 break;
                             case "8": // view all room bookings
                                 getAllRoomBookings();
+                                break;
+                            case "9": // view billings
+                                getAllBillings();
                                 break;
                             case "0": // quit
                                 exit = true;
@@ -563,7 +582,9 @@ public class Main {
                             break;
                         }
                         int trainerId = trainer.getUserId();
-                        System.out.println("Enter date (yyyy-mm-dd):");
+                        getTrainerSchedule(trainerId);
+
+                        System.out.println("\nEnter date (yyyy-mm-dd):");
                         String dateStr = reader.readLine();
                         Date date = Date.valueOf(dateStr);
                         System.out.println("Enter the start time (hh:mm:ss):");
@@ -588,7 +609,7 @@ public class Main {
                             break;
                         }
                         trainerId = trainer.getUserId();
-                        printTrainerSchedule(trainerId);
+                        getTrainerSchedule(trainerId);
                         
                         System.out.println("Enter date (yyyy-mm-dd):");
                         dateStr = reader.readLine();
@@ -687,11 +708,12 @@ public class Main {
             ResultSet resultSet = statement.executeQuery();
 
             boolean hasFitnessGoal = false;
+            System.out.println("Fitness goals:");
             while (resultSet.next()) {
                 String run = resultSet.getString("run");
                 String swim = resultSet.getString("swim");
                 String bike = resultSet.getString("bike");
-                System.out.println("Fitness goal:\n\tRun: " + run + " \tSwim: " + swim + " \tBike: " + bike);
+                System.out.println("\tRun: " + run + " \tSwim: " + swim + " \tBike: " + bike);
                 hasFitnessGoal = true;
             }
             return hasFitnessGoal;
@@ -711,10 +733,11 @@ public class Main {
             ResultSet resultSet = statement.executeQuery();
 
             boolean hasFitnessAchievement = false;
+            System.out.println("Fitness achievements:");
             while (resultSet.next()) {
                 String description = resultSet.getString("description");
                 Date date = resultSet.getDate("date_achieved");
-                System.out.println("Fitness achievement: \n\t" + description + " (" + date.toString() + ")");
+                System.out.println("\t" + description + " (" + date.toString() + ")");
                 hasFitnessAchievement = true;
             }
             return hasFitnessAchievement;
@@ -760,10 +783,11 @@ public class Main {
             ResultSet resultSet = statement.executeQuery();
 
             boolean hasExerciseRoutine = false;
+            System.out.println("Exercise routine:");
             while (resultSet.next()) {
                 String description = resultSet.getString("description");
                 String duration = resultSet.getString("duration");
-                System.out.println("Exercise routine: \n\tDescription: " + description + "\tDuration: " + duration);
+                System.out.println("\tDescription: " + description + "\tDuration: " + duration);
                 hasExerciseRoutine = true;
             }
             return hasExerciseRoutine;
@@ -825,7 +849,7 @@ public class Main {
     }    
 
     public void getEquipmentMaintenance(int equipmentId) {
-        String sql = "SELECT * FROM comp3005project.equipment_maintenance WHERE equipment_id = ?;";
+        String sql = "SELECT * FROM comp3005project.equipment WHERE equipment_id = ?;";
 
         try (Connection connection = DriverManager.getConnection(url, sqluser, sqlpassword);
                 PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -963,7 +987,7 @@ public class Main {
         return false; // Default to not available
     }
 
-    public void printTrainerSchedule(int trainerId) {
+    public void getTrainerSchedule(int trainerId) {
         String sql = "SELECT * FROM comp3005project.Trainer_schedule WHERE trainer_id = ?;";
     
         try (Connection connection = DriverManager.getConnection(url, sqluser, sqlpassword);
@@ -974,9 +998,10 @@ public class Main {
     
             System.out.println("Schedule:");
             while (resultSet.next()) {
+                int scheduleId = resultSet.getInt("schedule_id");
                 Timestamp startTime = resultSet.getTimestamp("start_time");
                 Timestamp endTime = resultSet.getTimestamp("end_time");
-                System.out.println("\tStart time: " + startTime.toString() + "\n\t\tEnd time: " + endTime.toString());
+                System.out.println(scheduleId + ".\tStart time: " + startTime.toString() + "\n\t\tEnd time: " + endTime.toString() + "\n");
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -995,11 +1020,10 @@ public class Main {
     
             while (resultSet.next()) {
                 int trainerId = resultSet.getInt("trainer_id");
-                Date date = resultSet.getDate("date");
                 Timestamp startTime = resultSet.getTimestamp("start_time");
                 int duration = resultSet.getInt("duration");
                 System.out.println("Personal session:\n");
-                System.out.println("\tTrainer ID: " + trainerId + "\n\tDate: " + date.toString() + "\n\tStart time: " + startTime.toString() + "\n\tDuration: " + duration);
+                System.out.println("\tTrainer ID: " + trainerId + "\n\tStart time: " + startTime.toString() + "\n\tDuration: " + duration);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -1007,7 +1031,7 @@ public class Main {
     }
 
     public void getAllMemberClasses(int memberId) {
-        String sql = "SELECT gc.class_id, gc.name, gc.trainer_id, gc.capacity, gc.date, gc.duration " +
+        String sql = "SELECT gc.class_id, gc.name, gc.trainer_id, gc.date, gc.duration " +
                      "FROM comp3005project.User u " +
                      "JOIN comp3005project.Group_class gc ON u.class_id = gc.class_id " +
                      "WHERE u.user_id = ?";
@@ -1022,11 +1046,10 @@ public class Main {
                     int classId = resultSet.getInt("class_id");
                     String name = resultSet.getString("name");
                     int trainerId = resultSet.getInt("trainer_id");
-                    int capacity = resultSet.getInt("capacity");
                     Date date = resultSet.getDate("date");
                     int duration = resultSet.getInt("duration");
                     System.out.println("Group class:\n");
-                    System.out.println("\tClass ID: " + classId + "\n\tName: " + name + "\n\tTrainer ID: " + trainerId + "\n\tCapacity: " + capacity + "\n\tDate: " + date.toString() + "\n\tDuration: " + duration);
+                    System.out.println("\tClass ID: " + classId + "\n\tName: " + name + "\n\tTrainer ID: " + trainerId + "\n\tDate: " + date.toString() + "\n\tDuration: " + duration);
                 }
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
@@ -1072,7 +1095,7 @@ public class Main {
             System.out.println(e.getMessage());
         }
     }
-    
+
     // CREATE
     public void createUser(User user) {
         String sql = "INSERT INTO comp3005project.user (first_name, last_name, phone_number, address, email, password, role) VALUES (?,?,?,?,?,?,?);";
@@ -1219,15 +1242,16 @@ public class Main {
             return;
         }
         
-        String sql = "INSERT INTO comp3005project.personal_session (member_id, start_time, duration, status) VALUES (?, ?, ?, ?);";
+        String sql = "INSERT INTO comp3005project.personal_session (member_id, trainer_id, start_time, duration, status) VALUES (?,?,?,?,?);";
 
         try (Connection connection = DriverManager.getConnection(url, sqluser, sqlpassword);
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             
             statement.setInt(1, memberId);
-            statement.setTimestamp(2, startTime);
-            statement.setInt(3, duration);
-            statement.setString(4, TrainingStatus.SCHEDULED.toString());
+            statement.setInt(2, trainerId);
+            statement.setTimestamp(3, startTime);
+            statement.setInt(4, duration);
+            statement.setString(5, TrainingStatus.SCHEDULED.toString());
             statement.executeUpdate();
             System.out.println("Personal session scheduled successfully!");
         } catch (SQLException e) {
@@ -1262,7 +1286,7 @@ public class Main {
 
     // UPDATE
     public void updatePersonalInformation(int member_id, User member) {
-        String sql = "UPDATE comp3005project.user SET first_name = COALESCE(?, first_name), last_name = COALESCE(?, last_name), email = COALESCE(?, email), phone_number = COALESCE(?, phone_number), address = COALESCE(?, address) WHERE user_id = ?;";
+        String sql = "UPDATE comp3005project.user SET first_name = COALESCE(?, first_name), last_name = COALESCE(?, last_name), email = COALESCE(?, email), password = COALESCE(?, password), phone_number = COALESCE(?, phone_number), address = COALESCE(?, address) WHERE user_id = ?;";
         
         try (Connection connection = DriverManager.getConnection(url, sqluser, sqlpassword);
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -1270,9 +1294,10 @@ public class Main {
             statement.setString(1, member.getFirstName());
             statement.setString(2, member.getLastName());
             statement.setString(3, member.getEmail());
-            statement.setString(4, member.getPhoneNumber());
-            statement.setString(5, member.getAddress());
-            statement.setInt(6, member_id);
+            statement.setString(4, member.getPassword());
+            statement.setString(5, member.getPhoneNumber());
+            statement.setString(6, member.getAddress());
+            statement.setInt(7, member_id);
             
             int rowsAffected = statement.executeUpdate();
             if (rowsAffected > 0) {
@@ -1411,21 +1436,21 @@ public class Main {
         }
     }
 
-    public void updateRoomBooking(int booking_id, int staff_id, String roomName, String duration) {
-        int room_id = getRoomId(roomName);
-        String sql = "UPDATE comp3005project.room_booking SET staff_id = COALESCE(?, staff_id), room_id = COALESCE(?, room_id), duration = COALESCE(?, duration) WHERE booking_id = ?;";
+    public void updateRoomBooking(int booking_id, int staff_id, String duration) {
+        // int room_id = getRoomId(roomName);
+        String sql = "UPDATE comp3005project.room_booking SET staff_id = COALESCE(?, staff_id), duration = COALESCE(?, duration) WHERE booking_id = ?;";
 
         try (Connection connection = DriverManager.getConnection(url, sqluser, sqlpassword);
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             
             statement.setInt(1, staff_id);
-            statement.setInt(2, room_id);
-            statement.setString(3, duration);
-            statement.setInt(4, booking_id);
+            // statement.setInt(2, room_id);
+            statement.setString(2, duration);
+            statement.setInt(3, booking_id);
             
             int rowsAffected = statement.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println(roomName + " booking updated successfully.\n");
+                // System.out.println("Booking updated successfully.\n"); // debug
             } else {
                 System.out.println("Failed to update room booking.");
             }
@@ -1455,8 +1480,8 @@ public class Main {
     }
 
     public void updateClassSchedule(int classId, Date date, String duration) {
-        String sql = "UPDATE comp3005project.class_schedule SET date = COALESCE(?, date), duration = COALESCE(?, duration) WHERE class_id = ?;";
-
+        String sql = "UPDATE comp3005project.Group_class SET date = ?, duration = COALESCE(?, duration) WHERE class_id = ?;";
+    
         try (Connection connection = DriverManager.getConnection(url, sqluser, sqlpassword);
              PreparedStatement statement = connection.prepareStatement(sql)) {
     
@@ -1511,15 +1536,13 @@ public class Main {
         }
     }
 
-    public void deleteTrainerSchedule(int trainerId, Timestamp startTime, Timestamp endTime) {
-        String sql = "DELETE FROM comp3005project.Trainer_schedule WHERE trainer_id = ? AND start_time = ? AND end_time = ?;";
-
+    public void deleteTrainerSchedule(int scheduleId) {
+        String sql = "DELETE FROM comp3005project.Trainer_schedule WHERE schedule_id = ?;";
+    
         try (Connection connection = DriverManager.getConnection(url, sqluser, sqlpassword);
              PreparedStatement statement = connection.prepareStatement(sql)) {
     
-            statement.setInt(1, trainerId);
-            statement.setTimestamp(2, startTime);
-            statement.setTimestamp(3, endTime);
+            statement.setInt(1, scheduleId);
     
             int rowsAffected = statement.executeUpdate();
             if (rowsAffected > 0) {

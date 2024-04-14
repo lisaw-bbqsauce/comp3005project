@@ -19,7 +19,7 @@ CREATE TABLE comp3005project.User (
 CREATE TABLE comp3005project.Health_metric (
     metric_id SERIAL PRIMARY KEY,
     member_id INT NOT NULL,
-    metric text,
+    metric text UNIQUE,
     value text,
     date_recorded DATE DEFAULT CURRENT_DATE,
     FOREIGN KEY (member_id) REFERENCES comp3005project.User(user_id)
@@ -62,17 +62,19 @@ CREATE TABLE comp3005project.Trainer_schedule (
 CREATE TABLE comp3005project.Personal_session (
     session_id SERIAL PRIMARY KEY,
     member_id INT NOT NULL,
+    trainer_id INT NOT NULL,
     start_time TIMESTAMP NOT NULL,
     duration INT NOT NULL,
     status text NOT NULL,
-    FOREIGN KEY (member_id) REFERENCES comp3005project.User(user_id)
+    FOREIGN KEY (member_id) REFERENCES comp3005project.User(user_id),
+    FOREIGN KEY (trainer_id) REFERENCES comp3005project.User(user_id)
 );
 
 CREATE TABLE comp3005project.Group_class (
     class_id SERIAL PRIMARY KEY,
     name text NOT NULL,
     trainer_id INT NOT NULL,
-    capacity INT NOT NULL,
+    capacity INT,
     date DATE NOT NULL,
     duration INT NOT NULL,
     FOREIGN KEY (trainer_id) REFERENCES comp3005project.User(user_id)
@@ -100,14 +102,14 @@ CREATE TABLE comp3005project.Billing (
 
 CREATE TABLE comp3005project.Equipment (
     equipment_id SERIAL PRIMARY KEY,
-    name text NOT NULL,
+    name text UNIQUE NOT NULL,
     equipment_status text NOT NULL,
     last_maintenance DATE
 );
 
 CREATE TABLE comp3005project.Room (
     room_id SERIAL PRIMARY KEY,
-    name text NOT NULL,
+    name text UNIQUE NOT NULL,
     status text NOT NULL
 );
 
@@ -162,3 +164,6 @@ VALUES ('Gym 1', 'AVAILABLE');
 
 INSERT INTO comp3005project.Room (name, status)
 VALUES ('Gym 2', 'AVAILABLE');
+
+INSERT INTO comp3005project.Room (name, status)
+VALUES ('Massage room 1', 'AVAILABLE');
